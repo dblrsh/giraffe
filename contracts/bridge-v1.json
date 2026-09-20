@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://giraffe.local/contracts/bridge-v1.json",
+  "title": "Giraffe Bridge v1 request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "bridgeVersion", "method", "params"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "bridgeVersion": { "const": 1 },
+    "method": {
+      "type": "string",
+      "enum": [
+        "app.getCapabilities", "app.getVersions", "app.openNativeSettings",
+        "conversation.list", "conversation.create", "conversation.get", "conversation.delete",
+        "message.list", "draft.get", "draft.save", "draft.delete",
+        "ai.prepareRequest", "ai.requestSend", "ai.cancel",
+        "health.requestAuthorization", "health.querySteps", "health.queryHeartRate", "health.querySleep", "health.clearCache",
+        "camera.capture", "media.list", "media.delete", "media.getDisplayResource", "ocr.recognize",
+        "settings.get", "settings.update", "updates.getStatus", "updates.check",
+        "updates.reportEditingState", "updates.requestApply", "updates.requestRollback", "privacy.requestEraseAll"
+      ]
+    },
+    "params": { "type": "object" }
+  }
+}

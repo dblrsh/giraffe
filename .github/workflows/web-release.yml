@@ -1,0 +1,60 @@
+name: Signed Web Release
+on:
+  workflow_dispatch:
+    inputs:
+      web_version:
+        description: Semantic Web version
+        required: true
+      release_sequence:
+        description: Strictly increasing integer
+        required: true
+      min_native_version:
+        description: Minimum native shell version
+        required: true
+        default: "0.1.0"
+      package_url:
+        description: Final immutable HTTPS URL for giraffe-web.zip
+        required: true
+      release_notes:
+        description: User-facing release notes
+        required: true
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    environment: web-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci && npm run check
+        working-directory: web
+      - run: node scripts/package-web.mjs
+      - name: Create manifest
+        env:
+          WEB_VERSION: ${{ inputs.web_version }}
+          RELEASE_SEQUENCE: ${{ inputs.release_sequence }}
+          MIN_NATIVE_VERSION: ${{ inputs.min_native_version }}
+          PACKAGE_URL: ${{ inputs.package_url }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: node scripts/create-web-manifest.mjs "$WEB_VERSION" "$RELEASE_SEQUENCE" "$MIN_NATIVE_VERSION" "$PACKAGE_URL" "$RELEASE_NOTES"
+      - name: Sign exact manifest bytes
+        env:
+          WEB_RELEASE_PRIVATE_KEY_BASE64: ${{ secrets.WEB_RELEASE_PRIVATE_KEY_BASE64 }}
+        run: |
+          test -n "$WEB_RELEASE_PRIVATE_KEY_BASE64" || { echo "缺少受保护的 Web 发布私钥"; exit 1; }
+          printf '%s' "$WEB_RELEASE_PRIVATE_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/web-release-key.pem"
+          node scripts/sign-manifest.mjs artifacts/manifest.json "$RUNNER_TEMP/web-release-key.pem" artifacts/manifest.sig
+          rm -f "$RUNNER_TEMP/web-release-key.pem"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signed-web-release-${{ inputs.web_version }}
+          path: |
+            artifacts/giraffe-web.zip
+            artifacts/manifest.json
+            artifacts/manifest.sig
+          if-no-files-found: error

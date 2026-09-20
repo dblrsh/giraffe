@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://giraffe.local/contracts/web-manifest-v1.schema.json",
+  "title": "Giraffe signed web release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "channel", "webVersion", "releaseSequence", "minNativeVersion", "bridgeVersion", "requiredCapabilities", "packageURL", "packageSHA256", "packageSize", "unpackedSize", "publishedAt", "releaseNotes"],
+  "properties": {
+    "formatVersion": { "const": 1 },
+    "channel": { "const": "stable" },
+    "webVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$" },
+    "releaseSequence": { "type": "integer", "minimum": 1 },
+    "minNativeVersion": { "type": "string" },
+    "bridgeVersion": { "const": 1 },
+    "requiredCapabilities": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "packageURL": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "packageSHA256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "packageSize": { "type": "integer", "minimum": 1, "maximum": 20971520 },
+    "unpackedSize": { "type": "integer", "minimum": 1, "maximum": 83886080 },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "releaseNotes": { "type": "string", "maxLength": 2000 }
+  }
+}
